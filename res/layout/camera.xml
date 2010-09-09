@@ -1,0 +1,62 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+	<!--  最終的にはCameraPreviewから情報を取得するのではなく、/dev/fb0でもなく、V4Lのデータを横取りする必要がある -->
+    <com.example.hands.CameraPreview 
+    	android:id="@+id/camera_preview"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+    />
+
+	<ImageView 
+    	android:id="@+id/black_bg"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+        android:background="@android:color/black"
+        android:visibility="visible"
+	/>
+
+	<ImageView 
+    	android:id="@+id/hand_image"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+	/>
+
+	<com.example.hands.OverlayLayer
+		android:id="@+id/overlay"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+	/>
+
+	<TextView
+		android:id="@+id/textview1"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text=""
+	/>	
+	
+	<TextView
+		android:id="@+id/textview2"
+		android:layout_below="@+id/textview1"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text=""
+	/>	
+	<TextView
+		android:id="@+id/textview3"
+		android:layout_below="@+id/textview2"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text=""
+	/>	
+	<TextView
+		android:id="@+id/textview4"
+		android:layout_below="@+id/textview3"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text=""
+	/>	
+
+</RelativeLayout>
+
