@@ -21,8 +21,10 @@ package com.example.hands;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -42,6 +44,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import android.preference.PreferenceManager;
 import android.provider.MediaStore.Images;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -53,6 +56,8 @@ import android.view.WindowManager;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+import android.hardware.Pcremocon;
 
 import android.util.Log;
 
@@ -71,6 +76,75 @@ public class MainActivity extends Activity {
 	private Bitmap paa_image;
 	private Bitmap none_image;
 	private ImageView mBlockImage;
+	
+    private SharedPreferences pref;
+    private ToggleButton recButton;
+    private Pcremocon pcremocon;
+    
+    protected static final String KEY_1CH = "1CH";
+    protected static final String KEY_2CH = "2CH";
+    protected static final String KEY_3CH = "3CH";
+
+    protected static String[] chKeys = {KEY_1CH, KEY_2CH, KEY_3CH}; 
+
+	
+    private boolean recSignal(int ch) {
+
+    	String key = chKeys[ch];
+	
+			byte[] signal = pcremocon.recvSignal();
+			String signalStr = convertByteToString(signal);
+
+			SharedPreferences.Editor editor = pref.edit();
+	        editor.putString(key, signalStr);
+	        editor.commit();
+	        
+	        if (signal.length == 240)
+	        	return true;
+	        
+	        return false;
+    }
+
+
+    private String convertByteToString(byte[] bytes) {
+		StringBuffer strbuf = new StringBuffer(bytes.length * 2);
+
+		for (int index = 0; index < bytes.length; index++) {
+			int bt = bytes[index] & 0xff;
+			if (bt < 0x10) {
+				strbuf.append("0");
+			}
+			strbuf.append(Integer.toHexString(bt));
+		}
+		return strbuf.toString();
+	}
+
+
+	private boolean sendSignal(int ch) {
+
+    	String key = chKeys[ch];
+    	boolean flg = false;
+        String signalStr = pref.getString(key, "");
+        if (signalStr.length() > 0){
+				
+				byte[] signal = convertStringToByte(signalStr);
+				// 送信chは固定
+				flg = pcremocon.sendSignal(1, signal);
+        	
+        }
+        return flg;
+    }
+
+    private byte[] convertStringToByte(String hex) {
+		byte[] bytes = new byte[hex.length() / 2];
+		for (int index = 0; index < bytes.length; index++) {
+			bytes[index] =
+				(byte) Integer.parseInt(
+					hex.substring(index * 2, (index + 1) * 2),
+					16);
+		}
+		return bytes;
+	}
 	
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -107,12 +181,15 @@ public class MainActivity extends Activity {
         DetectHand detectHand = mCameraPreview.getDetectHand();
         detectHand.setSkinHistgram(skin);
 
+        Context context = this.getApplicationContext();
+        pref = PreferenceManager.getDefaultSharedPreferences(context);
+        
 		mThread = new Thread(new Runnable() {
 			protected String[] handDetectList = {"GUU","CHOKI","PAA"}; 
 			int mHandDetectNo;
 			double[] param = {99,99,99};
 			
-			@Override
+//			@Override
 			public void run() {
 			
 				while(true){
@@ -125,7 +202,7 @@ public class MainActivity extends Activity {
 					if (mCameraPreview.isRefreshScreen()){
 						mHandler.post(new Runnable() {
 							
-							@Override
+//							@Override
 							public void run() {
 //								String msg = "NONE";
 //								if (mHandDetectNo > -1)
@@ -138,19 +215,22 @@ public class MainActivity extends Activity {
 									mBlockImage.setVisibility(View.VISIBLE);
 								switch (mHandDetectNo) {
 								case 0:
-									mHandImage.setImageBitmap(guu_image);
+									sendSignal(0);
+//									mHandImage.setImageBitmap(guu_image);
 									break;
 
 								case 1:
-									mHandImage.setImageBitmap(choki_image);
+									sendSignal(1);
+//									mHandImage.setImageBitmap(choki_image);
 									break;
 
 								case 2:
-									mHandImage.setImageBitmap(paa_image);
+									sendSignal(2);
+//									mHandImage.setImageBitmap(paa_image);
 									break;
 
 								default:
-									mHandImage.setImageBitmap(none_image);
+//									mHandImage.setImageBitmap(none_image);
 									break;
 								}
 								
